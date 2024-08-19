@@ -4,7 +4,6 @@
   "license": "MIT",
   "scripts": {},
   "private": true,
-  "dependencies": {},
   "devDependencies": {
     "@nuxt/devtools": "1.0.0",
     "@nuxt/eslint-config": "~0.3.6",
@@ -37,6 +36,7 @@
     "nuxt": "^3.10.0",
     "nx": "19.6.0",
     "prettier": "^2.6.2",
+    "start-server-and-test": "^2.0.5",
     "typescript": "~5.5.2",
     "vite": "^5.0.0",
     "vitest": "^1.3.1",
