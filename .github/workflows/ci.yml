@@ -70,7 +70,7 @@ jobs:
       # - name: 更動的部分重新 build 專案
       #   run: pnpm nx affected -t build --parallel=1
       - name: 執行 E2E 冒煙測試對更動的代碼片段
-        run: pnpm nx affected -t e2e
+        run: pnpm nx affected -t e2e-wait-server
         env:
           GLOBAL_API_BASE_URL: ${{ vars.GLOBAL_API_BASE_URL }}
           GLOBAL_E2E_TAGS: ${{ vars.GLOBAL_E2E_TAGS }}
