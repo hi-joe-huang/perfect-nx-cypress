@@ -1,0 +1,78 @@
+name: CI
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - develop
+  pull_request:
+
+# nx-set-shas 執行所需權限
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  main:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 取得當前倉庫
+        uses: actions/checkout@v4
+        with:
+          # 背景：預設只會抓取專案最新的 Commit
+          # 問題：nx affected 需要專案的前後文資訊才能判斷是否更動
+          # 解方：設置屬性索取所有歷史與分支
+          fetch-depth: 0
+      - name: 安裝 Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: 安裝 pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 9
+      - name: 安裝快取套件
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            node_modules
+          key: npm-dependencies-${{ hashFiles('pnpm-lock.yaml') }}
+      # 根據 Cypress 官方 PNPM 設置快取
+      # https://github.com/cypress-io/github-action/blob/master/.github/workflows/example-start-and-pnpm-workspaces.yml
+      - name: 安裝快取 Cypress binary
+        uses: actions/cache/restore@v4
+        with:
+          path: ~/.cache/Cypress
+          key: cypress-${{ runner.os }}-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            cypress-${{ runner.os }}-${{ hashFiles('**/pnpm-lock.yaml') }}
+      - name: 安裝套件
+        run: pnpm install --frozen-lockfile
+      - name: 儲存當前套件於快取中
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            node_modules
+          key: npm-dependencies-${{ hashFiles('pnpm-lock.yaml') }}
+                # Restore just local node_modules and the Cypress binary archives.
+      - name: 儲存當前 Cypress binary 於快取中
+        uses: actions/cache/save@v4
+        with:
+          path: ~/.cache/Cypress
+          key: cypress-${{ runner.os }}-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            cypress-${{ runner.os }}-${{ hashFiles('**/pnpm-lock.yaml') }}
+      - name: 計算 nx affected 指令所需的資料
+        uses: nrwl/nx-set-shas@v4
+        with:
+          main-branch-name: 'main'
+      # - name: 並行執行 Linter、Typecheck、Unit Test
+      #   run: pnpm nx affected -t lint typecheck test
+      # - name: 更動的部分重新 build 專案
+      #   run: pnpm nx affected -t build --parallel=1
+      - name: 執行 E2E 冒煙測試對更動的代碼片段
+        run: pnpm nx affected -t e2e
+        env:
+          GLOBAL_API_BASE_URL: ${{ vars.GLOBAL_API_BASE_URL }}
+          GLOBAL_E2E_TAGS: ${{ vars.GLOBAL_E2E_TAGS }}
+          BACKSTAGE_ACCOUNT: ${{ secrets.BACKSTAGE_ACCOUNT }}
+          BACKSTAGE_PASSWORD: ${{ secrets.BACKSTAGE_PASSWORD }}

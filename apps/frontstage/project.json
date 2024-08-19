@@ -1,0 +1,8 @@
+{
+  "name": "frontstage",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "application",
+  "sourceRoot": "apps/frontstage/src",
+  "// targets": "to see all targets run: nx show project frontstage --web",
+  "targets": {}
+}
